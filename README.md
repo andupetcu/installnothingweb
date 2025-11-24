@@ -1,33 +1,48 @@
-# install-nothing
+# Install Nothing – Terminal Simulator
 
-A terminal application that simulates installing things. It doesn't actually install anything.
+A playful installer simulator you can run in the terminal or in the browser.
+The web app renders a full‑screen terminal with themes, controls, and presets; no real installation happens.
 
-[![asciicast](https://asciinema.org/a/757039.svg)](https://asciinema.org/a/757039)
+## Features
+- CLI and Web: same simulation engine; the web server streams real CLI output over WebSocket.
+- Themes: macOS, Windows CMD/PowerShell, Ubuntu/Debian/Red Hat/Mint, Draco/One Dark, and more.
+- Controls overlay: Play/Pause, Restart, Stop, shareable URLs (double‑click/tap to reveal, auto‑hide).
+- Duration selector (HH:MM:SS) or Endless mode; live countdown in the top bar.
+- Font controls: family dropdown + size selector, full‑height terminal with xterm.js FitAddon.
 
-## Usage
-
+## Quick Start (CLI)
 ```bash
-cargo build --release
-cargo run --release
+cargo run --release -- --all                 # run all stages (default)
+cargo run --release -- bios kernel deno      # run specific stages
+cargo run --release -- --cycles 1 -- bios    # run finite number of cycles
+cargo run --release -- --help                # list all options
 ```
 
-Press Ctrl+C to stop.
-
-### Pick what to install
-
+## Quick Start (Web)
 ```bash
-# Install specific stages
-cargo run --release -- deno
+cargo run --release --bin installer-web
+# Open http://127.0.0.1:3000
+```
+- Pick a theme, simulator, duration (or Endless), font family/size; click Start.
+- Double‑click/tap to reveal the control bar (auto‑hides after 5s).
 
-# Install everything (default)
-cargo run --release -- --all
+Shareable URLs: the Share button copies a link with theme/stack/duration (and font) in query params.
+
+## Docker
+```bash
+docker build -t installnothing:web .
+docker run --rm -p 3000:3000 installnothing:web
+# Open http://localhost:3000
 ```
 
-See available stages:
-```bash
-cargo run --release -- --help
-```
+## Deploy (Coolify)
+- Type: Dockerfile, Internal Port: 3000, Domain: your domain (enable SSL).
+- Env (optional): `RUST_LOG=info`.
 
-## License
+## Repo Layout
+- `src/main.rs`, `src/cli.rs`, `src/installer.rs`: core CLI app.
+- `src/stages/*`: individual simulator stages.
+- `src/web_server.rs`: Axum WebSocket server for the web UI.
+- `web/`: single‑page web UI (xterm.js).
 
-Do whatever you want with it.
+License: MIT‑style; see LICENSE.
