@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Install Nothing — Terminal Simulator for Demos & Presentations</title>
+    <meta name="description" content="A full-screen, themeable terminal simulator for web and CLI. Pick macOS/Windows/Linux themes, choose a stack, share links, and run endless or timed demos — no real installs.">
+    <meta name="keywords" content="terminal simulator, fake terminal, macOS Terminal, xterm.js, installer demo, endless mode, websocket, developer demo, conference demo">
+    <link rel="canonical" href="https://installnothing.com/">
+    <meta name="robots" content="index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1">
+    <meta name="theme-color" content="#000000">
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://installnothing.com/">
+    <meta property="og:title" content="Install Nothing — Terminal Simulator">
+    <meta property="og:description" content="Themeable terminal simulator for demos and presentations. Fake installs. Real impact.">
+    <meta property="og:image" content="https://installnothing.com/og-image.png">
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Install Nothing — Terminal Simulator">
+    <meta name="twitter:description" content="Themeable terminal simulator for demos and presentations.">
+    <meta name="twitter:image" content="https://installnothing.com/og-image.png">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Install Nothing",
+      "url": "https://installnothing.com/",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "description": "A full-screen, themeable terminal simulator for web and CLI.",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
+    }
+    </script>
+
+    <!-- Analytics -->
+    <script defer src="https://analytics.noru1.ro/script.js" data-website-id="eeab6188-5279-49d1-9d42-f22780168378"></script>
+
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg: #0a0a0a;
+        --bg-alt: #111111;
+        --fg: #e6e6e6;
+        --fg-muted: #888888;
+        --accent: #3d8bfd;
+        --accent-hover: #5a9eff;
+        --green: #34c759;
+        --border: #222222;
+      }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        line-height: 1.6;
+      }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { color: var(--accent-hover); }
+
+      .container {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      /* Header */
+      header {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .header-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      .logo span { color: var(--green); }
+
+      nav a {
+        margin-left: 24px;
+        color: var(--fg-muted);
+        font-size: 14px;
+      }
+
+      nav a:hover { color: var(--fg); }
+
+      /* Hero */
+      .hero {
+        padding: 80px 0 60px;
+        text-align: center;
+      }
+
+      .hero h1 {
+        font-size: clamp(2rem, 5vw, 3rem);
+        font-weight: 700;
+        margin-bottom: 16px;
+        line-height: 1.2;
+      }
+
+      .hero .tagline {
+        font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+        color: var(--green);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        margin-bottom: 32px;
+      }
+
+      .hero p {
+        font-size: 1.1rem;
+        color: var(--fg-muted);
+        max-width: 600px;
+        margin: 0 auto 40px;
+      }
+
+      .cta-btn {
+        display: inline-block;
+        padding: 16px 32px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 1.1rem;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: background 0.2s, transform 0.2s;
+      }
+
+      .cta-btn:hover {
+        background: var(--accent-hover);
+        color: #fff;
+        transform: translateY(-2px);
+      }
+
+      /* Section styling */
+      section {
+        padding: 60px 0;
+        border-top: 1px solid var(--border);
+      }
+
+      section h2 {
+        font-size: 1.8rem;
+        margin-bottom: 40px;
+        text-align: center;
+      }
+
+      /* Features */
+      .features-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+      }
+
+      .feature-card {
+        background: var(--bg-alt);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+      }
+
+      .feature-card .icon {
+        font-size: 2rem;
+        margin-bottom: 12px;
+      }
+
+      .feature-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+
+      .feature-card p {
+        color: var(--fg-muted);
+        font-size: 0.95rem;
+      }
+
+      /* Theme Gallery */
+      .themes-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 16px;
+      }
+
+      .theme-card {
+        background: var(--bg-alt);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+        transition: transform 0.2s, border-color 0.2s;
+      }
+
+      .theme-card:hover {
+        transform: translateY(-4px);
+        border-color: var(--accent);
+      }
+
+      .theme-card img {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      .theme-card .name {
+        padding: 10px 12px;
+        font-size: 0.9rem;
+        color: var(--fg-muted);
+        border-top: 1px solid var(--border);
+      }
+
+      /* Use Cases */
+      .use-cases-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+      }
+
+      .use-case {
+        background: var(--bg-alt);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        text-align: center;
+      }
+
+      .use-case .icon {
+        font-size: 2.5rem;
+        margin-bottom: 16px;
+      }
+
+      .use-case h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .use-case p {
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+      }
+
+      /* How It Works */
+      .steps {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 32px;
+        max-width: 900px;
+        margin: 0 auto;
+      }
+
+      .step {
+        text-align: center;
+      }
+
+      .step-number {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 48px;
+        height: 48px;
+        background: var(--accent);
+        color: #fff;
+        font-size: 1.4rem;
+        font-weight: 700;
+        border-radius: 50%;
+        margin-bottom: 16px;
+      }
+
+      .step h3 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+
+      .step p {
+        color: var(--fg-muted);
+        font-size: 0.95rem;
+      }
+
+      /* FAQ */
+      .faq-list {
+        max-width: 700px;
+        margin: 0 auto;
+      }
+
+      .faq-item {
+        border-bottom: 1px solid var(--border);
+        padding: 20px 0;
+      }
+
+      .faq-item:last-child { border-bottom: none; }
+
+      .faq-item h3 {
+        font-size: 1rem;
+        margin-bottom: 8px;
+        color: var(--fg);
+      }
+
+      .faq-item p {
+        color: var(--fg-muted);
+        font-size: 0.95rem;
+      }
+
+      /* Footer */
+      footer {
+        padding: 40px 0;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+      }
+
+      footer a { color: var(--fg-muted); }
+      footer a:hover { color: var(--fg); }
+
+      .footer-links {
+        margin-bottom: 16px;
+      }
+
+      .footer-links a {
+        margin: 0 12px;
+      }
+
+      /* Responsive */
+      @media (max-width: 600px) {
+        .hero { padding: 50px 0 40px; }
+        section { padding: 40px 0; }
+        .header-inner { flex-direction: column; gap: 12px; }
+        nav a { margin: 0 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container header-inner">
+        <div class="logo"><span>&gt;_</span> Install Nothing</div>
+        <nav>
+          <a href="#features">Features</a>
+          <a href="#themes">Themes</a>
+          <a href="#use-cases">Use Cases</a>
+          <a href="#faq">FAQ</a>
+          <a href="https://github.com/andrei/install-nothing" target="_blank">GitHub</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="container">
+          <h1>Terminal Simulator for Demos & Presentations</h1>
+          <p class="tagline">Fake Installs. Real Impact.</p>
+          <p>A full-screen, themeable terminal that simulates realistic installation sequences. Perfect for conference booths, product demos, and developer presentations — without installing anything.</p>
+          <a href="/app/?autostart=1" class="cta-btn">Start Demo</a>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="container">
+          <h2>Features</h2>
+          <div class="features-grid">
+            <div class="feature-card">
+              <div class="icon">🎨</div>
+              <h3>15+ Themes</h3>
+              <p>macOS, Windows, Ubuntu, Dracula, Nord, and more. Match your brand or presentation style.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">⚡</div>
+              <h3>20 Simulation Stages</h3>
+              <p>BIOS boot, kernel compilation, Docker containers, AI model loading, cloud provisioning, and more.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">🔗</div>
+              <h3>Shareable URLs</h3>
+              <p>Configure once, share the link. Theme, duration, and settings are encoded in the URL.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">⏱️</div>
+              <h3>Timed or Endless</h3>
+              <p>Set a specific duration or run forever. Perfect countdown timer in the overlay.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">📱</div>
+              <h3>Fully Responsive</h3>
+              <p>Works on desktop, tablet, and mobile. Touch-friendly controls with double-tap to reveal.</p>
+            </div>
+            <div class="feature-card">
+              <div class="icon">🖥️</div>
+              <h3>CLI & Web</h3>
+              <p>Run in your terminal or in the browser. Same simulation engine, your choice of interface.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="themes">
+        <div class="container">
+          <h2>Theme Gallery</h2>
+          <div class="themes-grid">
+            <div class="theme-card">
+              <img src="/app/themes/dracula.png" alt="Dracula theme" loading="lazy">
+              <div class="name">Dracula</div>
+            </div>
+            <div class="theme-card">
+              <img src="/app/themes/one-dark.png" alt="One Dark theme" loading="lazy">
+              <div class="name">One Dark</div>
+            </div>
+            <div class="theme-card">
+              <img src="/app/themes/nord.png" alt="Nord theme" loading="lazy">
+              <div class="name">Nord</div>
+            </div>
+            <div class="theme-card">
+              <img src="/app/themes/macos-pro.png" alt="macOS Pro theme" loading="lazy">
+              <div class="name">macOS Pro</div>
+            </div>
+            <div class="theme-card">
+              <img src="/app/themes/ubuntu.png" alt="Ubuntu theme" loading="lazy">
+              <div class="name">Ubuntu</div>
+            </div>
+            <div class="theme-card">
+              <img src="/app/themes/windows-powershell.png" alt="Windows PowerShell theme" loading="lazy">
+              <div class="name">PowerShell</div>
+            </div>
+          </div>
+          <p style="text-align: center; margin-top: 24px; color: var(--fg-muted);">
+            <a href="/app/">View all 15 themes →</a>
+          </p>
+        </div>
+      </section>
+
+      <section id="use-cases">
+        <div class="container">
+          <h2>Use Cases</h2>
+          <div class="use-cases-grid">
+            <div class="use-case">
+              <div class="icon">🎪</div>
+              <h3>Conference Booths</h3>
+              <p>Eye-catching terminal visuals without risk of crashes or exposing real systems.</p>
+            </div>
+            <div class="use-case">
+              <div class="icon">🎬</div>
+              <h3>Product Demos</h3>
+              <p>Show realistic installation flows for marketing videos and presentations.</p>
+            </div>
+            <div class="use-case">
+              <div class="icon">📺</div>
+              <h3>Stream Backgrounds</h3>
+              <p>Animated terminal overlay for coding streams and developer content.</p>
+            </div>
+            <div class="use-case">
+              <div class="icon">💼</div>
+              <h3>Portfolio Showcase</h3>
+              <p>Demonstrate terminal UI skills on your developer portfolio.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works">
+        <div class="container">
+          <h2>How It Works</h2>
+          <div class="steps">
+            <div class="step">
+              <div class="step-number">1</div>
+              <h3>Pick a Theme</h3>
+              <p>Choose from 15+ terminal themes including macOS, Windows, Linux distros, and popular color schemes.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">2</div>
+              <h3>Configure</h3>
+              <p>Select simulation stages, set duration (or go endless), and customize font settings.</p>
+            </div>
+            <div class="step">
+              <div class="step-number">3</div>
+              <h3>Run & Share</h3>
+              <p>Start the simulation and share the URL. Your configuration is encoded in the link.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq">
+        <div class="container">
+          <h2>FAQ</h2>
+          <div class="faq-list">
+            <div class="faq-item">
+              <h3>Does this actually install anything?</h3>
+              <p>No. It's a simulation that displays realistic-looking terminal output. Nothing is installed, modified, or executed on your system.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Can I use this for my conference booth?</h3>
+              <p>Absolutely! That's one of the main use cases. Set it to endless mode, pick a theme, and let it run on a big screen.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Is there a CLI version?</h3>
+              <p>Yes! Install via cargo and run <code>install-nothing --all</code> in your terminal. Same simulation engine, native experience.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Is it free?</h3>
+              <p>Yes, completely free and open source. Check out the <a href="https://github.com/andrei/install-nothing">GitHub repo</a>.</p>
+            </div>
+            <div class="faq-item">
+              <h3>Can I contribute themes or stages?</h3>
+              <p>Pull requests welcome! See AGENTS.md in the repo for contribution guidelines.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="container">
+        <div class="footer-links">
+          <a href="/app/">Launch App</a>
+          <a href="https://github.com/andrei/install-nothing">GitHub</a>
+          <a href="https://github.com/andrei/install-nothing/issues">Report Issue</a>
+        </div>
+        <p>Made with fun by <a href="https://github.com/andrei">Kerim Buyukakyuz</a> · MIT License</p>
+      </div>
+    </footer>
+  </body>
+</html>
