@@ -44,7 +44,7 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
     let duration_secs = params.duration.unwrap_or(30);
     let stack = params.stack.unwrap_or_else(|| "default".to_string());
     let theme = params.theme.unwrap_or_else(|| "dracula".to_string());
-    let endless = matches!(params.mode.as_deref(), Some("endless"));
+    let endless = matches!(params.mode.as_deref(), Some("endless")) || duration_secs == 0;
 
     // Start a child process of the CLI simulator and stream its stdout
     let binary = resolve_cli_binary();
@@ -66,15 +66,12 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
             let stdout = child.stdout.take();
             let mut reader = stdout.map(BufReader::new);
 
-            let _ = socket
-                .send(Message::Text(format!(
-                    if endless {
-                        format!("\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, mode: ENDLESS).\u{001b}[0m")
-                    } else {
-                        format!("\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, duration: {duration_secs}s).\u{001b}[0m")
-                    }
-                )))
-                .await;
+            let banner = if endless {
+                format!("\u{{001b}}[36mStarting simulation (stack: {stack}, theme: {theme}, mode: ENDLESS).\u{{001b}}[0m")
+            } else {
+                format!("\u{{001b}}[36mStarting simulation (stack: {stack}, theme: {theme}, duration: {duration_secs}s).\u{{001b}}[0m")
+            };
+            let _ = socket.send(Message::Text(banner)).await;
 
             if endless {
                 // Stream until client closes or child exits
