@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Install Nothing – Web Simulator</title>
+    <title>Install Nothing – Terminal Simulator</title>
     <link rel="stylesheet" href="https://unpkg.com/xterm/css/xterm.css" />
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Fira+Code:wght@400;600&family=Source+Code+Pro:wght@400;600&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <style>
@@ -25,7 +25,7 @@
   </head>
   <body>
     <div class="app" id="app">
-      <h1>Install Nothing – Web Simulator</h1>
+      <h1>Install Nothing – Terminal Simulator</h1>
       <p>Pick a terminal theme, a tech-stack preset, and a duration, then start the simulation.</p>
       <div class="controls">
         <div>
@@ -135,10 +135,13 @@
       <div class="topbar" id="topbar">
         <strong>Simulation</strong>
         <span id="status"></span>
+        <span style="opacity:.6">·</span>
+        <span id="countdown" aria-live="polite" title="Time remaining">00:00:00</span>
         <div style="flex:1"></div>
         <button id="playPauseBtn">Pause</button>
         <button id="restartBtn">Restart</button>
         <button id="stopBtn">Stop</button>
+        <button id="shareBtn" title="Copy shareable URL">Share</button>
       </div>
       <div id="terminal"></div>
     </div>
@@ -207,13 +210,17 @@
       let lastConfig = null;
       let hideTimer = null;
       let lastTapTime = 0;
+      let countdownInterval = null;
+      let remainingSeconds = 0;
       const startBtn = document.getElementById('startBtn');
       const playPauseBtn = document.getElementById('playPauseBtn');
       const restartBtn = document.getElementById('restartBtn');
       const stopBtn = document.getElementById('stopBtn');
+      const shareBtn = document.getElementById('shareBtn');
       const terminalWrap = document.getElementById('terminalWrap');
       const topbar = document.getElementById('topbar');
       const status = document.getElementById('status');
+      const countdownEl = document.getElementById('countdown');
 
       function start() {
         const theme = document.getElementById('theme').value;
@@ -259,6 +266,9 @@
         buffer = [];
         playPauseBtn.textContent = 'Pause';
 
+        // start countdown
+        startCountdown(config.duration);
+
         if (socket) {
           try { socket.close(); } catch {}
         }
@@ -277,7 +287,7 @@
             term.writeln(ev.data);
           }
         });
-        socket.addEventListener('close', () => status.textContent = 'Disconnected');
+        socket.addEventListener('close', () => { status.textContent = 'Disconnected'; stopCountdown(true); });
         socket.addEventListener('error', () => status.textContent = 'Error');
       }
 
@@ -289,6 +299,7 @@
         status.textContent = '';
         term = null;
         hideControls();
+        stopCountdown(false);
       }
 
       startBtn.addEventListener('click', start);
@@ -306,6 +317,17 @@
         if (!term || !lastConfig) return;
         term.reset();
         connectWS(lastConfig);
+      });
+      shareBtn.addEventListener('click', async () => {
+        if (!lastConfig) return;
+        const url = buildShareUrl(lastConfig);
+        try {
+          await navigator.clipboard.writeText(url);
+          flashStatus('Link copied');
+        } catch {
+          // Fallback
+          prompt('Copy this URL', url);
+        }
       });
 
       // Populate time selects with best-practice ranges and sensible default (00:00:45)
@@ -349,6 +371,84 @@
           }
         });
       }
+
+      function startCountdown(totalSeconds) {
+        remainingSeconds = totalSeconds || 0;
+        updateCountdown();
+        if (countdownInterval) clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+          if (!paused && remainingSeconds > 0) {
+            remainingSeconds -= 1;
+            updateCountdown();
+          }
+          if (remainingSeconds <= 0) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+          }
+        }, 1000);
+      }
+
+      function stopCountdown(toZero) {
+        if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+        if (toZero) { remainingSeconds = 0; updateCountdown(); }
+      }
+
+      function updateCountdown() {
+        countdownEl.textContent = formatHHMMSS(remainingSeconds);
+      }
+
+      function formatHHMMSS(total) {
+        const h = Math.floor(total / 3600);
+        const m = Math.floor((total % 3600) / 60);
+        const s = Math.floor(total % 60);
+        return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+      }
+
+      function buildShareUrl(cfg) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('theme', cfg.theme);
+        url.searchParams.set('stack', cfg.stack);
+        // prefer original h/m/s if present, else derive
+        const total = cfg.duration || 0;
+        const h = (cfg.h ?? Math.floor(total / 3600));
+        const m = (cfg.m ?? Math.floor((total % 3600) / 60));
+        const s = (cfg.s ?? Math.floor(total % 60));
+        url.searchParams.set('h', String(h));
+        url.searchParams.set('m', String(m));
+        url.searchParams.set('s', String(s));
+        // include font prefs for completeness
+        url.searchParams.set('fontsize', String(cfg.fontSize));
+        url.searchParams.set('fontfamily', cfg.fontFamily);
+        return url.toString();
+      }
+
+      function flashStatus(message) {
+        const prev = status.textContent;
+        status.textContent = `${prev ? prev + ' · ' : ''}${message}`;
+        setTimeout(() => {
+          // remove the added message, keep earlier status
+          status.textContent = prev;
+        }, 2000);
+      }
+
+      // On page load, apply query params to prefill controls
+      (function applyQueryParams() {
+        const p = new URLSearchParams(window.location.search);
+        const theme = p.get('theme');
+        const stack = p.get('stack');
+        const h = p.get('h');
+        const m = p.get('m');
+        const s = p.get('s');
+        const fontsize = p.get('fontsize');
+        const fontfamily = p.get('fontfamily');
+        if (theme) document.getElementById('theme').value = theme;
+        if (stack) document.getElementById('stack').value = stack;
+        if (h) document.getElementById('durationH').value = String(Math.max(0, Math.min(23, parseInt(h, 10) || 0)));
+        if (m) document.getElementById('durationM').value = String(Math.max(0, Math.min(59, parseInt(m, 10) || 0)));
+        if (s) document.getElementById('durationS').value = String(Math.max(0, Math.min(59, parseInt(s, 10) || 0)));
+        if (fontsize) document.getElementById('fontsize').value = String(Math.max(8, Math.min(28, parseInt(fontsize, 10) || 10)));
+        if (fontfamily) document.getElementById('fontfamily').value = fontfamily;
+      })();
     </script>
   </body>
   </html>
