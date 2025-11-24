@@ -38,7 +38,9 @@
       .card { background: #111; border: 1px solid #222; border-radius: 8px; overflow: hidden; cursor: pointer; transition: transform .08s ease-in-out, border-color .2s; }
       .card:hover { transform: translateY(-2px); border-color: #2a2a2a; }
       .card img { display: block; width: 100%; height: auto; }
-      .card .title { padding: 8px 10px; border-top: 1px solid #222; color: #ccc; font-size: 13px; }
+      .card .title { display:flex; align-items:center; justify-content:space-between; gap:8px; padding: 8px 10px; border-top: 1px solid #222; color: #ccc; font-size: 13px; }
+      .use-btn { background: #0a84ff; color: #fff; border: 0; border-radius: 6px; padding: 4px 8px; font-size: 12px; cursor: pointer; }
+      .use-btn:hover { filter: brightness(1.1); }
 
       /* Lightbox overlay */
       .lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.85); display: none; align-items: center; justify-content: center; z-index: 100; }
@@ -336,11 +338,23 @@
           img.src = `themes/${item.id}.png`;
           img.alt = `${item.name} preview`;
           img.loading = 'lazy';
-          const title = document.createElement('div');
-          title.className = 'title';
-          title.textContent = item.name;
+          const titleRow = document.createElement('div');
+          titleRow.className = 'title';
+          const nameEl = document.createElement('span');
+          nameEl.textContent = item.name;
+          const btn = document.createElement('button');
+          btn.className = 'use-btn';
+          btn.type = 'button';
+          btn.textContent = 'Use this theme';
+          btn.addEventListener('click', (ev) => {
+            ev.stopPropagation();
+            const sel = document.getElementById('theme');
+            if (sel) sel.value = item.id;
+          });
+          titleRow.appendChild(nameEl);
+          titleRow.appendChild(btn);
           card.appendChild(img);
-          card.appendChild(title);
+          card.appendChild(titleRow);
           card.addEventListener('click', () => openLightbox(img.src, item.name));
           themeGallery.appendChild(card);
         });
