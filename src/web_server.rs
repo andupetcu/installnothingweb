@@ -8,7 +8,7 @@ use axum::{
 };
 use axum::extract::ws::{Message, WebSocket};
 use serde::Deserialize;
-use tokio::{fs, io::{AsyncBufReadExt, BufReader}, net::TcpListener, process::Command, time::{sleep, timeout}};
+use tokio::{io::{AsyncBufReadExt, BufReader}, net::TcpListener, process::Command, time::timeout};
 use tower_http::services::ServeDir;
 
 #[derive(Debug, Deserialize)]
@@ -67,9 +67,9 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
             let mut reader = stdout.map(BufReader::new);
 
             let banner = if endless {
-                format!("\u{{001b}}[36mStarting simulation (stack: {stack}, theme: {theme}, mode: ENDLESS).\u{{001b}}[0m")
+                format!("\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, mode: ENDLESS).\u{001b}[0m")
             } else {
-                format!("\u{{001b}}[36mStarting simulation (stack: {stack}, theme: {theme}, duration: {duration_secs}s).\u{{001b}}[0m")
+                format!("\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, duration: {duration_secs}s).\u{001b}[0m")
             };
             let _ = socket.send(Message::Text(banner)).await;
 

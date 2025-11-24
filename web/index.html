@@ -139,9 +139,15 @@
     <div class="terminal-wrap" id="terminalWrap">
       <div class="topbar" id="topbar">
         <strong>Simulation</strong>
-        <span id="status"></span>
-        <span style="opacity:.6">·</span>
-        <span id="countdown" aria-live="polite" title="Time remaining">00:00:00</span>
+        <span>
+          Status: <span id="status">-</span>
+          |
+          Simulator: <span id="simval">-</span>
+          |
+          Theme: <span id="themeval">-</span>
+          |
+          Duration countdown: <span id="countdown" aria-live="polite" title="Time remaining">00:00:00</span>
+        </span>
         <div style="flex:1"></div>
         <button id="playPauseBtn">Pause</button>
         <button id="restartBtn">Restart</button>
@@ -225,6 +231,8 @@
       const terminalWrap = document.getElementById('terminalWrap');
       const topbar = document.getElementById('topbar');
       const status = document.getElementById('status');
+      const simVal = document.getElementById('simval');
+      const themeVal = document.getElementById('themeval');
       const countdownEl = document.getElementById('countdown');
 
       function start() {
@@ -293,7 +301,11 @@
         url.search = `?theme=${encodeURIComponent(config.theme)}&stack=${encodeURIComponent(config.stack)}&duration=${config.duration}&mode=${mode}`;
 
         socket = new WebSocket(url.toString());
-        socket.addEventListener('open', () => status.textContent = `Connected · ${config.stack} · ${config.theme}`);
+        socket.addEventListener('open', () => {
+          status.textContent = 'Connected';
+          simVal.textContent = config.stack;
+          themeVal.textContent = config.theme;
+        });
         socket.addEventListener('message', (ev) => {
           if (paused) {
             buffer.push(ev.data);
@@ -302,7 +314,7 @@
           }
         });
         socket.addEventListener('close', () => { status.textContent = 'Disconnected'; stopCountdown(true); });
-        socket.addEventListener('error', () => status.textContent = 'Error');
+        socket.addEventListener('error', () => { status.textContent = 'Error'; });
       }
 
       function stop() {
@@ -311,6 +323,8 @@
         terminalWrap.style.display = 'none';
         document.getElementById('app').style.display = 'block';
         status.textContent = '';
+        simVal.textContent = '-';
+        themeVal.textContent = '-';
         term = null;
         hideControls();
         stopCountdown(false);
