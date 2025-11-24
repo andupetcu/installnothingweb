@@ -624,6 +624,7 @@
         const mode = p.get('mode');
         const fontsize = p.get('fontsize');
         const fontfamily = p.get('fontfamily');
+        const autostart = p.get('autostart');
         if (theme) document.getElementById('theme').value = theme;
         if (stack) document.getElementById('stack').value = stack;
         if (h) document.getElementById('durationH').value = String(Math.max(0, Math.min(23, parseInt(h, 10) || 0)));
@@ -634,6 +635,10 @@
         if (fontfamily) document.getElementById('fontfamily').value = fontfamily;
         // reflect endless UI state on initial load
         updateEndlessUI();
+        // Auto-start if requested
+        if (autostart === '1' || autostart === 'true') {
+          setTimeout(() => start(), 100);
+        }
       })();
 
       // Toggle enabled/disabled state of time inputs based on Endless
