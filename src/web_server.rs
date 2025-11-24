@@ -16,6 +16,7 @@ struct WsParams {
     theme: Option<String>,
     stack: Option<String>,
     duration: Option<u64>, // seconds
+    mode: Option<String>,  // "endless" or omitted
 }
 
 #[tokio::main]
@@ -43,6 +44,7 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
     let duration_secs = params.duration.unwrap_or(30);
     let stack = params.stack.unwrap_or_else(|| "default".to_string());
     let theme = params.theme.unwrap_or_else(|| "dracula".to_string());
+    let endless = matches!(params.mode.as_deref(), Some("endless"));
 
     // Start a child process of the CLI simulator and stream its stdout
     let binary = resolve_cli_binary();
@@ -66,30 +68,57 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
 
             let _ = socket
                 .send(Message::Text(format!(
-                    "\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, duration: {duration_secs}s).\u{001b}[0m"
+                    if endless {
+                        format!("\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, mode: ENDLESS).\u{001b}[0m")
+                    } else {
+                        format!("\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, duration: {duration_secs}s).\u{001b}[0m")
+                    }
                 )))
                 .await;
 
-            let end_time = tokio::time::Instant::now() + Duration::from_secs(duration_secs);
-            loop {
-                // timeout small interval to check duration
-                if tokio::time::Instant::now() >= end_time { break; }
-                if let Some(r) = reader.as_mut() {
-                    let mut line = String::new();
-                    match timeout(Duration::from_millis(100), r.read_line(&mut line)).await {
-                        Ok(Ok(0)) => break, // EOF
-                        Ok(Ok(_n)) => {
-                            if !line.is_empty() {
-                                let _ = socket.send(Message::Text(line.trim_end_matches('\n').to_string())).await;
+            if endless {
+                // Stream until client closes or child exits
+                loop {
+                    if let Some(r) = reader.as_mut() {
+                        let mut line = String::new();
+                        match timeout(Duration::from_millis(200), r.read_line(&mut line)).await {
+                            Ok(Ok(0)) => break, // EOF
+                            Ok(Ok(_n)) => {
+                                if !line.is_empty() {
+                                    if socket.send(Message::Text(line.trim_end_matches('\n').to_string())).await.is_err() {
+                                        break; // client gone
+                                    }
+                                }
+                            }
+                            Ok(Err(_e)) => break,
+                            Err(_) => {
+                                // idle
                             }
                         }
-                        Ok(Err(_e)) => break,
-                        Err(_) => {
-                            // read timed out; continue to check duration
-                        }
+                    } else {
+                        break;
                     }
-                } else {
-                    break;
+                }
+            } else {
+                // Duration-bound streaming
+                let end_time = tokio::time::Instant::now() + Duration::from_secs(duration_secs);
+                loop {
+                    if tokio::time::Instant::now() >= end_time { break; }
+                    if let Some(r) = reader.as_mut() {
+                        let mut line = String::new();
+                        match timeout(Duration::from_millis(100), r.read_line(&mut line)).await {
+                            Ok(Ok(0)) => break, // EOF
+                            Ok(Ok(_n)) => {
+                                if !line.is_empty() {
+                                    let _ = socket.send(Message::Text(line.trim_end_matches('\n').to_string())).await;
+                                }
+                            }
+                            Ok(Err(_e)) => break,
+                            Err(_) => { /* read timed out */ }
+                        }
+                    } else {
+                        break;
+                    }
                 }
             }
 
