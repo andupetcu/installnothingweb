@@ -19,9 +19,16 @@
       button:disabled { opacity: .6; cursor: not-allowed; }
       .terminal-wrap { display: none; position: fixed; inset: 0; background: #000; }
       #terminal { position: absolute; inset: 0; }
-      .topbar { position: absolute; top: 0; left: 0; right: 0; height: 44px; background: rgba(0,0,0,.7); color: #bbb; display: flex; align-items: center; padding: 0 12px; gap: 12px; z-index: 10; opacity: 0; pointer-events: none; transition: opacity .2s ease-in-out; }
+      .topbar { position: absolute; top: 0; left: 0; right: 0; height: 44px; background: rgba(0,0,0,.7); color: #bbb; display: flex; align-items: center; padding: 0 12px; gap: 12px; z-index: 10; opacity: 0; pointer-events: none; transition: opacity .2s ease-in-out; border-bottom: 1px solid rgba(255,255,255,.06); backdrop-filter: blur(2px); }
       .topbar.visible { opacity: 1; pointer-events: auto; }
+      .topbar strong { margin-right: 8px; color: #eee; }
       .topbar button { background: #222; color: #ddd; border: 1px solid #333; }
+      .separator { opacity: .45; padding: 0 6px; }
+      .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; border: 1px solid #333; background: #111; color: #ddd; }
+      .badge.status.ok { background: rgba(0,128,0,.15); border-color: #1f7a1f; color: #8ef08e; }
+      .badge.status.warn { background: rgba(204,153,0,.12); border-color: #7a5f00; color: #ffd24d; }
+      .badge.status.err { background: rgba(153,0,0,.15); border-color: #7a1f1f; color: #ff8c8c; }
+      .badge.countdown { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace; color: #a3e7ff; border-color: #1f3a7a; background: rgba(0,64,128,.12); }
     </style>
   </head>
   <body>
@@ -140,13 +147,13 @@
       <div class="topbar" id="topbar">
         <strong>Simulation</strong>
         <span>
-          Status: <span id="status">-</span>
-          |
-          Simulator: <span id="simval">-</span>
-          |
-          Theme: <span id="themeval">-</span>
-          |
-          Duration countdown: <span id="countdown" aria-live="polite" title="Time remaining">00:00:00</span>
+          Status: <span id="status" class="badge status">-</span>
+          <span class="separator">|</span>
+          Simulator: <span id="simval" class="badge sim">-</span>
+          <span class="separator">|</span>
+          Theme: <span id="themeval" class="badge theme">-</span>
+          <span class="separator">|</span>
+          Duration countdown: <span id="countdown" class="badge countdown" aria-live="polite" title="Time remaining">00:00:00</span>
         </span>
         <div style="flex:1"></div>
         <button id="playPauseBtn">Pause</button>
@@ -301,8 +308,9 @@
         url.search = `?theme=${encodeURIComponent(config.theme)}&stack=${encodeURIComponent(config.stack)}&duration=${config.duration}&mode=${mode}`;
 
         socket = new WebSocket(url.toString());
+        setStatus('Connecting');
         socket.addEventListener('open', () => {
-          status.textContent = 'Connected';
+          setStatus('Connected');
           simVal.textContent = config.stack;
           themeVal.textContent = config.theme;
         });
@@ -313,8 +321,8 @@
             term.writeln(ev.data);
           }
         });
-        socket.addEventListener('close', () => { status.textContent = 'Disconnected'; stopCountdown(true); });
-        socket.addEventListener('error', () => { status.textContent = 'Error'; });
+        socket.addEventListener('close', () => { setStatus('Disconnected'); stopCountdown(true); });
+        socket.addEventListener('error', () => { setStatus('Error'); });
       }
 
       function stop() {
@@ -457,6 +465,14 @@
           // remove the added message, keep earlier status
           status.textContent = prev;
         }, 2000);
+      }
+
+      function setStatus(state) {
+        status.textContent = state;
+        status.classList.remove('ok','warn','err');
+        if (state === 'Connected') status.classList.add('ok');
+        else if (state === 'Connecting') status.classList.add('warn');
+        else status.classList.add('err');
       }
 
       // On page load, apply query params to prefill controls
