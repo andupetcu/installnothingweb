@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Install Nothing – Web Simulator</title>
+    <link rel="stylesheet" href="https://unpkg.com/xterm/css/xterm.css" />
+    <style>
+      html, body { height: 100%; margin: 0; background: #0b0b0b; color: #e6e6e6; font-family: Inter, system-ui, sans-serif; }
+      .app { max-width: 960px; margin: 48px auto; padding: 0 16px; }
+      .controls { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+      label { font-size: 12px; color: #aaa; display: block; margin-bottom: 6px; }
+      select, input[type="number"] { width: 100%; padding: 8px; background: #141414; color: #e6e6e6; border: 1px solid #2a2a2a; border-radius: 6px; }
+      button { padding: 10px 16px; background: #3d8bfd; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
+      button:disabled { opacity: .6; cursor: not-allowed; }
+      .terminal-wrap { display: none; position: fixed; inset: 0; background: #000; }
+      #terminal { position: absolute; inset: 0; }
+      .topbar { position: absolute; top: 0; left: 0; right: 0; height: 44px; background: rgba(0,0,0,.7); color: #bbb; display: flex; align-items: center; padding: 0 12px; gap: 12px; }
+      .topbar button { background: #222; }
+    </style>
+  </head>
+  <body>
+    <div class="app" id="app">
+      <h1>Install Nothing – Web Simulator</h1>
+      <p>Pick a terminal theme, a tech-stack preset, and a duration, then start the simulation.</p>
+      <div class="controls">
+        <div>
+          <label for="theme">Theme</label>
+          <select id="theme">
+            <option value="dracula">Dracula</option>
+            <option value="one-dark">One Dark</option>
+            <option value="solarized-dark">Solarized Dark</option>
+            <option value="gruvbox-dark">Gruvbox Dark</option>
+            <option value="nord">Nord</option>
+            <option value="monokai">Monokai</option>
+          </select>
+        </div>
+        <div>
+          <label for="stack">Simulator</label>
+          <select id="stack">
+            <option value="default">All Stages (default)</option>
+            <option value="bios">BIOS</option>
+            <option value="boot">Boot</option>
+            <option value="bootloader">Bootloader</option>
+            <option value="filesystem">Filesystem</option>
+            <option value="system">System</option>
+            <option value="network">Network</option>
+            <option value="drivers">Drivers</option>
+            <option value="initramfs">Initramfs</option>
+            <option value="packages">Packages</option>
+            <option value="kernel">Kernel</option>
+            <option value="compilation">Compilation</option>
+            <option value="deno">Deno</option>
+            <option value="database">Database</option>
+            <option value="xorg">Xorg</option>
+            <option value="services">Services</option>
+            <option value="retro">Retro</option>
+            <option value="locale">Locale</option>
+            <option value="container">Container</option>
+            <option value="ai">AI</option>
+            <option value="cloud">Cloud</option>
+          </select>
+        </div>
+        <div>
+          <label for="duration">Duration (seconds)</label>
+          <input id="duration" type="number" min="5" max="600" value="45" />
+        </div>
+        <div>
+          <button id="startBtn">Start</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="terminal-wrap" id="terminalWrap">
+      <div class="topbar">
+        <strong>Simulation</strong>
+        <span id="status"></span>
+        <div style="flex:1"></div>
+        <button id="exitBtn">Exit</button>
+      </div>
+      <div id="terminal"></div>
+    </div>
+
+    <script src="https://unpkg.com/xterm/lib/xterm.js"></script>
+    <script src="https://unpkg.com/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
+    <script>
+      const themes = {
+        'dracula': { background: '#282a36', foreground: '#f8f8f2', cursor: '#f8f8f2', black:'#000000', red:'#ff5555', green:'#50fa7b', yellow:'#f1fa8c', blue:'#bd93f9', magenta:'#ff79c6', cyan:'#8be9fd', white:'#bbbbbb' },
+        'one-dark': { background: '#282c34', foreground: '#abb2bf', cursor: '#528bff' },
+        'solarized-dark': { background: '#002b36', foreground: '#93a1a1', cursor: '#93a1a1' },
+        'gruvbox-dark': { background: '#1d2021', foreground: '#ebdbb2', cursor: '#ebdbb2' },
+        'nord': { background: '#2e3440', foreground: '#d8dee9', cursor: '#88c0d0' },
+        'monokai': { background: '#272822', foreground: '#f8f8f2', cursor: '#f8f8f2' },
+      };
+
+      let term, socket, fitAddon, onResize;
+      const startBtn = document.getElementById('startBtn');
+      const exitBtn = document.getElementById('exitBtn');
+      const terminalWrap = document.getElementById('terminalWrap');
+      const status = document.getElementById('status');
+
+      function start() {
+        const theme = document.getElementById('theme').value;
+        const stack = document.getElementById('stack').value;
+        const duration = parseInt(document.getElementById('duration').value || '30', 10);
+
+        terminalWrap.style.display = 'block';
+        document.getElementById('app').style.display = 'none';
+
+        term = new window.Terminal({
+          convertEol: true,
+          disableStdin: true,
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+          fontSize: 14,
+          theme: themes[theme] || themes['dracula'],
+        });
+        term.open(document.getElementById('terminal'));
+        // Ensure terminal uses 100% of the container
+        fitAddon = new window.FitAddon.FitAddon();
+        term.loadAddon(fitAddon);
+        fitAddon.fit();
+        onResize = () => fitAddon.fit();
+        window.addEventListener('resize', onResize);
+
+        const url = new URL(window.location.href);
+        url.protocol = url.protocol.replace('http', 'ws');
+        url.pathname = '/ws';
+        url.search = `?theme=${encodeURIComponent(theme)}&stack=${encodeURIComponent(stack)}&duration=${duration}`;
+
+        socket = new WebSocket(url.toString());
+        socket.addEventListener('open', () => status.textContent = `Connected · ${stack} · ${theme}`);
+        socket.addEventListener('message', (ev) => term.writeln(ev.data));
+        socket.addEventListener('close', () => status.textContent = 'Disconnected');
+        socket.addEventListener('error', () => status.textContent = 'Error');
+      }
+
+      function exit() {
+        if (socket) socket.close();
+        if (onResize) window.removeEventListener('resize', onResize);
+        terminalWrap.style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+        status.textContent = '';
+        term = null;
+      }
+
+      startBtn.addEventListener('click', start);
+      exitBtn.addEventListener('click', exit);
+    </script>
+  </body>
+  </html>

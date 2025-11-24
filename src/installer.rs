@@ -17,6 +17,7 @@ use std::time::Duration;
 pub struct Installer {
     rng: rand::rngs::ThreadRng,
     selected_stages: Vec<Stage>,
+    cycles: Option<usize>,
 }
 
 impl Installer {
@@ -24,6 +25,15 @@ impl Installer {
         Self {
             rng: rand::thread_rng(),
             selected_stages: stages,
+            cycles: None,
+        }
+    }
+
+    pub fn new_with_cycles(stages: Vec<Stage>, cycles: Option<usize>) -> Self {
+        Self {
+            rng: rand::thread_rng(),
+            selected_stages: stages,
+            cycles,
         }
     }
 
@@ -102,13 +112,16 @@ impl Installer {
     }
 
     pub fn run(&mut self) -> io::Result<()> {
-        terminal::enable_raw_mode()?;
-        execute!(
-            io::stdout(),
-            terminal::Clear(ClearType::All),
-            cursor::MoveTo(0, 0)
-        )?;
-        terminal::disable_raw_mode()?;
+        let web_mode = std::env::var("WEB_MODE").ok().as_deref() == Some("1");
+        if !web_mode {
+            terminal::enable_raw_mode()?;
+            execute!(
+                io::stdout(),
+                terminal::Clear(ClearType::All),
+                cursor::MoveTo(0, 0)
+            )?;
+            terminal::disable_raw_mode()?;
+        }
 
         self.print_header();
 
@@ -124,7 +137,7 @@ impl Installer {
         })?;
         println!();
 
-        let mut cycle = 0;
+        let mut cycle = 0usize;
         loop {
             cycle += 1;
 
@@ -164,6 +177,15 @@ impl Installer {
                 thread::sleep(Duration::from_millis(self.rng.gen_range(300..800)));
             }
 
+            if let Some(max_cycles) = self.cycles {
+                if cycle >= max_cycles {
+                    println!(
+                        "\n{}",
+                        "Installation complete!".bright_green().bold()
+                    );
+                    break;
+                }
+            }
             println!(
                 "\n{}",
                 "Installation complete! Restarting installation process..."
@@ -172,6 +194,7 @@ impl Installer {
             );
             thread::sleep(Duration::from_millis(2000));
         }
+        Ok(())
     }
 }
 

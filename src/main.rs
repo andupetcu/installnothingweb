@@ -29,7 +29,8 @@ fn run_installer() -> io::Result<()> {
     let mut rng = rand::thread_rng();
     stages.shuffle(&mut rng);
 
-    let mut installer = Installer::new(stages);
+    let cycles = cli.cycles; // None => infinite
+    let mut installer = Installer::new_with_cycles(stages, cycles);
     installer.run()
 }
 

@@ -88,6 +88,10 @@ pub struct Cli {
     /// Install all stages (default behavior)
     #[arg(short, long, conflicts_with = "stages")]
     pub all: bool,
+
+    /// Number of cycles to run (omit for endless)
+    #[arg(long)]
+    pub cycles: Option<usize>,
 }
 
 impl Cli {
@@ -110,6 +114,7 @@ mod tests {
         let cli = Cli {
             stages: vec![],
             all: false,
+            cycles: None,
         };
         assert_eq!(cli.get_stages(), Stage::all());
     }
@@ -119,6 +124,7 @@ mod tests {
         let cli = Cli {
             stages: vec![],
             all: true,
+            cycles: None,
         };
         assert_eq!(cli.get_stages(), Stage::all());
     }
@@ -128,6 +134,7 @@ mod tests {
         let cli = Cli {
             stages: vec![Stage::Bios, Stage::Boot],
             all: false,
+            cycles: None,
         };
         assert_eq!(cli.get_stages(), vec![Stage::Bios, Stage::Boot]);
     }
