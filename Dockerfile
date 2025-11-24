@@ -1,10 +1,11 @@
-FROM rust:1.81 as builder
+FROM rust:1.81 AS builder
 WORKDIR /app
 
 # Cache deps
 COPY Cargo.toml Cargo.lock ./
 COPY src ./src
 COPY web ./web
+COPY data ./data
 
 RUN cargo build --release --bin installer-web --bin install-nothing
 
@@ -21,4 +22,3 @@ ENV RUST_LOG=info
 EXPOSE 3000
 USER app
 CMD ["installer-web"]
-
