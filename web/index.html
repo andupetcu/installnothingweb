@@ -49,6 +49,39 @@
       .lightbox-content img { max-width: 100%; max-height: 80vh; border: 1px solid #333; border-radius: 6px; box-shadow: 0 10px 30px rgba(0,0,0,.6); }
       .lightbox-caption { margin-top: 10px; color: #ddd; font-size: 14px; }
       .lightbox-close { position: absolute; top: 16px; right: 16px; background: #222; color: #ddd; border: 1px solid #333; border-radius: 6px; padding: 6px 10px; cursor: pointer; }
+
+      /* Responsive tweaks */
+      @media (max-width: 1024px) {
+        .app { margin: 32px auto; }
+        .controls { grid-template-columns: 1fr 1fr 1fr; }
+        .gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      }
+
+      @media (max-width: 720px) {
+        .app { margin: 28px auto; }
+        h1 { font-size: 1.35rem; }
+        .controls { grid-template-columns: 1fr 1fr; }
+        .time-input { flex-wrap: wrap; }
+        .time-input select { width: 100%; }
+        .gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        /* Bigger touch targets to avoid iOS zoom */
+        button, select, input[type="number"] { font-size: 16px; min-height: 42px; }
+        .use-btn { padding: 6px 10px; }
+        /* Topbar wraps neatly on mobile overlay */
+        .topbar { height: auto; flex-wrap: wrap; gap: 8px; padding: 6px 8px; }
+        .topbar > span { flex: 1 0 100%; }
+      }
+
+      @media (max-width: 480px) {
+        .app { margin: 22px auto; padding: 0 12px; }
+        h1 { font-size: 1.15rem; }
+        .controls { grid-template-columns: 1fr; gap: 10px; }
+        .gallery { grid-template-columns: 1fr; }
+        .card .title { font-size: 12px; padding: 8px; }
+        .lightbox-content { max-width: 96vw; }
+        .lightbox-content img { max-height: 64vh; }
+        .lightbox-close { padding: 10px 14px; font-size: 14px; }
+      }
     </style>
   </head>
   <body>
