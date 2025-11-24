@@ -28,7 +28,7 @@ async fn main() {
         .route("/ws", get(ws_handler))
         .fallback_service(static_service);
 
-    let addr: SocketAddr = "127.0.0.1:3000".parse().unwrap();
+    let addr: SocketAddr = "0.0.0.0:3000".parse().unwrap();
     println!("installer-web listening on http://{addr}");
     println!("Open in your browser to test the simulation.");
 
