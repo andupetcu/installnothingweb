@@ -5,18 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Install Nothing – Web Simulator</title>
     <link rel="stylesheet" href="https://unpkg.com/xterm/css/xterm.css" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Fira+Code:wght@400;600&family=Source+Code+Pro:wght@400;600&family=Ubuntu+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <style>
       html, body { height: 100%; margin: 0; background: #0b0b0b; color: #e6e6e6; font-family: Inter, system-ui, sans-serif; }
       .app { max-width: 960px; margin: 48px auto; padding: 0 16px; }
-      .controls { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 12px; align-items: end; }
+      .controls { display: grid; grid-template-columns: 1fr 1fr 1.4fr 0.6fr 1fr auto; gap: 12px; align-items: end; }
+      .time-input { display: flex; gap: 6px; align-items: center; }
+      .time-input select { width: 5.2rem; padding: 8px; background: #141414; color: #e6e6e6; border: 1px solid #2a2a2a; border-radius: 6px; }
       label { font-size: 12px; color: #aaa; display: block; margin-bottom: 6px; }
       select, input[type="number"] { width: 100%; padding: 8px; background: #141414; color: #e6e6e6; border: 1px solid #2a2a2a; border-radius: 6px; }
       button { padding: 10px 16px; background: #3d8bfd; color: #fff; border: 0; border-radius: 6px; cursor: pointer; }
       button:disabled { opacity: .6; cursor: not-allowed; }
       .terminal-wrap { display: none; position: fixed; inset: 0; background: #000; }
       #terminal { position: absolute; inset: 0; }
-      .topbar { position: absolute; top: 0; left: 0; right: 0; height: 44px; background: rgba(0,0,0,.7); color: #bbb; display: flex; align-items: center; padding: 0 12px; gap: 12px; }
-      .topbar button { background: #222; }
+      .topbar { position: absolute; top: 0; left: 0; right: 0; height: 44px; background: rgba(0,0,0,.7); color: #bbb; display: flex; align-items: center; padding: 0 12px; gap: 12px; z-index: 10; opacity: 0; pointer-events: none; transition: opacity .2s ease-in-out; }
+      .topbar.visible { opacity: 1; pointer-events: auto; }
+      .topbar button { background: #222; color: #ddd; border: 1px solid #333; }
     </style>
   </head>
   <body>
@@ -27,12 +31,29 @@
         <div>
           <label for="theme">Theme</label>
           <select id="theme">
-            <option value="dracula">Dracula</option>
-            <option value="one-dark">One Dark</option>
-            <option value="solarized-dark">Solarized Dark</option>
-            <option value="gruvbox-dark">Gruvbox Dark</option>
-            <option value="nord">Nord</option>
-            <option value="monokai">Monokai</option>
+            <optgroup label="Popular">
+              <option value="dracula">Dracula</option>
+              <option value="one-dark">One Dark</option>
+              <option value="solarized-dark">Solarized Dark</option>
+              <option value="gruvbox-dark">Gruvbox Dark</option>
+              <option value="nord">Nord</option>
+              <option value="monokai">Monokai</option>
+            </optgroup>
+            <optgroup label="macOS Terminal">
+              <option value="macos-basic">macOS Basic</option>
+              <option value="macos-pro">macOS Pro</option>
+              <option value="macos-homebrew">macOS Homebrew</option>
+            </optgroup>
+            <optgroup label="Windows">
+              <option value="windows-cmd">Windows CMD</option>
+              <option value="windows-powershell">Windows PowerShell</option>
+            </optgroup>
+            <optgroup label="Linux Distros">
+              <option value="ubuntu">Ubuntu</option>
+              <option value="debian">Debian</option>
+              <option value="redhat">Red Hat</option>
+              <option value="mint">Linux Mint</option>
+            </optgroup>
           </select>
         </div>
         <div>
@@ -62,8 +83,47 @@
           </select>
         </div>
         <div>
-          <label for="duration">Duration (seconds)</label>
-          <input id="duration" type="number" min="5" max="600" value="45" />
+          <label>Duration (HH:MM:SS)</label>
+          <div class="time-input">
+            <select id="durationH" aria-label="Hours"></select>
+            <span>:</span>
+            <select id="durationM" aria-label="Minutes"></select>
+            <span>:</span>
+            <select id="durationS" aria-label="Seconds"></select>
+          </div>
+        </div>
+        <div>
+          <label for="fontsize">Font size (px)</label>
+          <select id="fontsize">
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10" selected>10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+            <option value="13">13</option>
+            <option value="14">14</option>
+            <option value="16">16</option>
+            <option value="18">18</option>
+            <option value="20">20</option>
+            <option value="22">22</option>
+            <option value="24">24</option>
+            <option value="26">26</option>
+            <option value="28">28</option>
+          </select>
+        </div>
+        <div>
+          <label for="fontfamily">Font family</label>
+          <select id="fontfamily">
+            <option value="ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">System Default</option>
+            <option value="'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">JetBrains Mono</option>
+            <option value="'Fira Code', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">Fira Code</option>
+            <option value="'Source Code Pro', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">Source Code Pro</option>
+            <option value="'Ubuntu Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace">Ubuntu Mono</option>
+            <option value="Consolas, 'Courier New', monospace">Consolas</option>
+            <option value="Menlo, Monaco, 'Courier New', monospace">Menlo</option>
+            <option value="Monaco, 'Courier New', monospace">Monaco</option>
+            <option value="'Courier New', monospace">Courier New</option>
+          </select>
         </div>
         <div>
           <button id="startBtn">Start</button>
@@ -72,11 +132,13 @@
     </div>
 
     <div class="terminal-wrap" id="terminalWrap">
-      <div class="topbar">
+      <div class="topbar" id="topbar">
         <strong>Simulation</strong>
         <span id="status"></span>
         <div style="flex:1"></div>
-        <button id="exitBtn">Exit</button>
+        <button id="playPauseBtn">Pause</button>
+        <button id="restartBtn">Restart</button>
+        <button id="stopBtn">Stop</button>
       </div>
       <div id="terminal"></div>
     </div>
@@ -85,24 +147,88 @@
     <script src="https://unpkg.com/xterm-addon-fit/lib/xterm-addon-fit.js"></script>
     <script>
       const themes = {
-        'dracula': { background: '#282a36', foreground: '#f8f8f2', cursor: '#f8f8f2', black:'#000000', red:'#ff5555', green:'#50fa7b', yellow:'#f1fa8c', blue:'#bd93f9', magenta:'#ff79c6', cyan:'#8be9fd', white:'#bbbbbb' },
-        'one-dark': { background: '#282c34', foreground: '#abb2bf', cursor: '#528bff' },
-        'solarized-dark': { background: '#002b36', foreground: '#93a1a1', cursor: '#93a1a1' },
-        'gruvbox-dark': { background: '#1d2021', foreground: '#ebdbb2', cursor: '#ebdbb2' },
-        'nord': { background: '#2e3440', foreground: '#d8dee9', cursor: '#88c0d0' },
-        'monokai': { background: '#272822', foreground: '#f8f8f2', cursor: '#f8f8f2' },
+        // Popular
+        'dracula': { background: '#282a36', foreground: '#f8f8f2', cursor: '#f8f8f2',
+          black:'#000000', red:'#ff5555', green:'#50fa7b', yellow:'#f1fa8c', blue:'#bd93f9', magenta:'#ff79c6', cyan:'#8be9fd', white:'#bbbbbb',
+          brightBlack:'#555555', brightRed:'#ff6e6e', brightGreen:'#69ff94', brightYellow:'#ffffa5', brightBlue:'#d6acff', brightMagenta:'#ff92df', brightCyan:'#a4ffff', brightWhite:'#ffffff' },
+        'one-dark': { background: '#282c34', foreground: '#abb2bf', cursor: '#528bff',
+          black:'#000000', red:'#e06c75', green:'#98c379', yellow:'#e5c07b', blue:'#61afef', magenta:'#c678dd', cyan:'#56b6c2', white:'#dcdfe4',
+          brightBlack:'#5c6370', brightRed:'#e06c75', brightGreen:'#98c379', brightYellow:'#e5c07b', brightBlue:'#61afef', brightMagenta:'#c678dd', brightCyan:'#56b6c2', brightWhite:'#ffffff' },
+        'solarized-dark': { background: '#002b36', foreground: '#93a1a1', cursor: '#93a1a1',
+          black:'#073642', red:'#dc322f', green:'#859900', yellow:'#b58900', blue:'#268bd2', magenta:'#d33682', cyan:'#2aa198', white:'#eee8d5',
+          brightBlack:'#002b36', brightRed:'#cb4b16', brightGreen:'#586e75', brightYellow:'#657b83', brightBlue:'#839496', brightMagenta:'#6c71c4', brightCyan:'#93a1a1', brightWhite:'#fdf6e3' },
+        'gruvbox-dark': { background: '#1d2021', foreground: '#ebdbb2', cursor: '#ebdbb2',
+          black:'#282828', red:'#cc241d', green:'#98971a', yellow:'#d79921', blue:'#458588', magenta:'#b16286', cyan:'#689d6a', white:'#a89984',
+          brightBlack:'#928374', brightRed:'#fb4934', brightGreen:'#b8bb26', brightYellow:'#fabd2f', brightBlue:'#83a598', brightMagenta:'#d3869b', brightCyan:'#8ec07c', brightWhite:'#ebdbb2' },
+        'nord': { background: '#2e3440', foreground: '#d8dee9', cursor: '#88c0d0',
+          black:'#3b4252', red:'#bf616a', green:'#a3be8c', yellow:'#ebcb8b', blue:'#81a1c1', magenta:'#b48ead', cyan:'#88c0d0', white:'#e5e9f0',
+          brightBlack:'#4c566a', brightRed:'#bf616a', brightGreen:'#a3be8c', brightYellow:'#ebcb8b', brightBlue:'#81a1c1', brightMagenta:'#b48ead', brightCyan:'#8fbcbb', brightWhite:'#eceff4' },
+        'monokai': { background: '#272822', foreground: '#f8f8f2', cursor: '#f8f8f2',
+          black:'#272822', red:'#f92672', green:'#a6e22e', yellow:'#f4bf75', blue:'#66d9ef', magenta:'#ae81ff', cyan:'#a1efe4', white:'#f8f8f2',
+          brightBlack:'#555555', brightRed:'#ff669d', brightGreen:'#c0ff6a', brightYellow:'#ffd866', brightBlue:'#a6e1fa', brightMagenta:'#d6baff', brightCyan:'#c7fffd', brightWhite:'#ffffff' },
+
+        // macOS Terminal
+        'macos-basic': { background: '#ffffff', foreground: '#000000', cursor: '#000000',
+          black:'#000000', red:'#800000', green:'#008000', yellow:'#808000', blue:'#000080', magenta:'#800080', cyan:'#008080', white:'#c0c0c0',
+          brightBlack:'#808080', brightRed:'#ff0000', brightGreen:'#00ff00', brightYellow:'#ffff00', brightBlue:'#0000ff', brightMagenta:'#ff00ff', brightCyan:'#00ffff', brightWhite:'#ffffff' },
+        'macos-pro': { background: '#000000', foreground: '#e5e5e5', cursor: '#e5e5e5', selection: '#404040',
+          black:'#000000', red:'#ff3b30', green:'#34c759', yellow:'#ffcc00', blue:'#0a84ff', magenta:'#ff2d55', cyan:'#5ac8fa', white:'#e5e5e5',
+          brightBlack:'#808080', brightRed:'#ff453a', brightGreen:'#30d158', brightYellow:'#ffd60a', brightBlue:'#64d2ff', brightMagenta:'#ff375f', brightCyan:'#64d2ff', brightWhite:'#ffffff' },
+        'macos-homebrew': { background: '#000000', foreground: '#00ff00', cursor: '#00ff00',
+          black:'#001100', red:'#007700', green:'#00aa00', yellow:'#66ff66', blue:'#00dd00', magenta:'#00ff66', cyan:'#00ff99', white:'#66ff66',
+          brightBlack:'#003300', brightRed:'#00aa00', brightGreen:'#00ff00', brightYellow:'#99ff99', brightBlue:'#00ff66', brightMagenta:'#66ff99', brightCyan:'#99ffcc', brightWhite:'#ccffcc' },
+
+        // Windows
+        'windows-cmd': { background: '#000000', foreground: '#C0C0C0', cursor: '#FFFFFF',
+          black:'#000000', red:'#AA0000', green:'#00AA00', yellow:'#AA5500', blue:'#0000AA', magenta:'#AA00AA', cyan:'#00AAAA', white:'#AAAAAA',
+          brightBlack:'#555555', brightRed:'#FF5555', brightGreen:'#55FF55', brightYellow:'#FFFF55', brightBlue:'#5555FF', brightMagenta:'#FF55FF', brightCyan:'#55FFFF', brightWhite:'#FFFFFF' },
+        'windows-powershell': { background: '#012456', foreground: '#eeeeee', cursor: '#ffffff',
+          black:'#0C0C0C', red:'#C50F1F', green:'#13A10E', yellow:'#C19C00', blue:'#0037DA', magenta:'#881798', cyan:'#3A96DD', white:'#CCCCCC',
+          brightBlack:'#767676', brightRed:'#E74856', brightGreen:'#16C60C', brightYellow:'#F9F1A5', brightBlue:'#3B78FF', brightMagenta:'#B4009E', brightCyan:'#61D6D6', brightWhite:'#F2F2F2' },
+
+        // Linux Distros
+        'ubuntu': { background: '#2C001E', foreground: '#EEEEEC', cursor: '#FFFFFF',
+          black:'#2E3436', red:'#CC0000', green:'#4E9A06', yellow:'#C4A000', blue:'#3465A4', magenta:'#75507B', cyan:'#06989A', white:'#D3D7CF',
+          brightBlack:'#555753', brightRed:'#EF2929', brightGreen:'#8AE234', brightYellow:'#FCE94F', brightBlue:'#729FCF', brightMagenta:'#AD7FA8', brightCyan:'#34E2E2', brightWhite:'#EEEEEC' },
+        'debian': { background: '#1B1B1B', foreground: '#EDEDED', cursor: '#FFFFFF',
+          black:'#2E3436', red:'#CC0000', green:'#4E9A06', yellow:'#C4A000', blue:'#3465A4', magenta:'#A0006B', cyan:'#06989A', white:'#D3D7CF',
+          brightBlack:'#555753', brightRed:'#EF2929', brightGreen:'#8AE234', brightYellow:'#FCE94F', brightBlue:'#729FCF', brightMagenta:'#FF1493', brightCyan:'#34E2E2', brightWhite:'#EEEEEC' },
+        'redhat': { background: '#1E1E1E', foreground: '#E6E6E6', cursor: '#FFFFFF',
+          black:'#1E1E1E', red:'#CC0000', green:'#2AA198', yellow:'#B58900', blue:'#268BD2', magenta:'#D33682', cyan:'#2AA198', white:'#E6E6E6',
+          brightBlack:'#4D4D4D', brightRed:'#FF1A1A', brightGreen:'#33CC99', brightYellow:'#FFCC00', brightBlue:'#66B2FF', brightMagenta:'#FF66A3', brightCyan:'#66E0CC', brightWhite:'#FFFFFF' },
+        'mint': { background: '#1b1d1e', foreground: '#c5c8c6', cursor: '#c5c8c6',
+          black:'#1b1d1e', red:'#cc342b', green:'#89b482', yellow:'#fba922', blue:'#3971ed', magenta:'#a36ac7', cyan:'#70c0ba', white:'#c5c8c6',
+          brightBlack:'#969896', brightRed:'#f96a38', brightGreen:'#a3d6a7', brightYellow:'#ffd75f', brightBlue:'#6cb6ff', brightMagenta:'#c7a0dc', brightCyan:'#9be3de', brightWhite:'#ffffff' },
       };
 
       let term, socket, fitAddon, onResize;
+      let paused = false;
+      let buffer = [];
+      let lastConfig = null;
+      let hideTimer = null;
+      let lastTapTime = 0;
       const startBtn = document.getElementById('startBtn');
-      const exitBtn = document.getElementById('exitBtn');
+      const playPauseBtn = document.getElementById('playPauseBtn');
+      const restartBtn = document.getElementById('restartBtn');
+      const stopBtn = document.getElementById('stopBtn');
       const terminalWrap = document.getElementById('terminalWrap');
+      const topbar = document.getElementById('topbar');
       const status = document.getElementById('status');
 
       function start() {
         const theme = document.getElementById('theme').value;
         const stack = document.getElementById('stack').value;
-        const duration = parseInt(document.getElementById('duration').value || '30', 10);
+        const h = parseInt(document.getElementById('durationH').value || '0', 10);
+        const m = parseInt(document.getElementById('durationM').value || '0', 10);
+        const s = parseInt(document.getElementById('durationS').value || '0', 10);
+        let duration = h * 3600 + m * 60 + s;
+        // enforce sane bounds: min 5s, max 6h
+        if (duration < 5) duration = 5;
+        if (duration > 21600) duration = 21600;
+        const fontSize = parseInt(document.getElementById('fontsize').value || '10', 10);
+        const fontFamily = document.getElementById('fontfamily').value;
+
+        lastConfig = { theme, stack, duration, fontSize, fontFamily, h, m, s };
 
         terminalWrap.style.display = 'block';
         document.getElementById('app').style.display = 'none';
@@ -110,8 +236,8 @@
         term = new window.Terminal({
           convertEol: true,
           disableStdin: true,
-          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
-          fontSize: 14,
+          fontFamily,
+          fontSize,
           theme: themes[theme] || themes['dracula'],
         });
         term.open(document.getElementById('terminal'));
@@ -121,30 +247,108 @@
         fitAddon.fit();
         onResize = () => fitAddon.fit();
         window.addEventListener('resize', onResize);
+        connectWS(lastConfig);
+
+        // Controls are hidden by default; reveal on double click/tap
+        enableOverlayControls();
+      }
+
+      function connectWS(config) {
+        // reset pause state and buffer
+        paused = false;
+        buffer = [];
+        playPauseBtn.textContent = 'Pause';
+
+        if (socket) {
+          try { socket.close(); } catch {}
+        }
 
         const url = new URL(window.location.href);
         url.protocol = url.protocol.replace('http', 'ws');
         url.pathname = '/ws';
-        url.search = `?theme=${encodeURIComponent(theme)}&stack=${encodeURIComponent(stack)}&duration=${duration}`;
+        url.search = `?theme=${encodeURIComponent(config.theme)}&stack=${encodeURIComponent(config.stack)}&duration=${config.duration}`;
 
         socket = new WebSocket(url.toString());
-        socket.addEventListener('open', () => status.textContent = `Connected · ${stack} · ${theme}`);
-        socket.addEventListener('message', (ev) => term.writeln(ev.data));
+        socket.addEventListener('open', () => status.textContent = `Connected · ${config.stack} · ${config.theme}`);
+        socket.addEventListener('message', (ev) => {
+          if (paused) {
+            buffer.push(ev.data);
+          } else {
+            term.writeln(ev.data);
+          }
+        });
         socket.addEventListener('close', () => status.textContent = 'Disconnected');
         socket.addEventListener('error', () => status.textContent = 'Error');
       }
 
-      function exit() {
+      function stop() {
         if (socket) socket.close();
         if (onResize) window.removeEventListener('resize', onResize);
         terminalWrap.style.display = 'none';
         document.getElementById('app').style.display = 'block';
         status.textContent = '';
         term = null;
+        hideControls();
       }
 
       startBtn.addEventListener('click', start);
-      exitBtn.addEventListener('click', exit);
+      stopBtn.addEventListener('click', stop);
+      playPauseBtn.addEventListener('click', () => {
+        if (!term) return;
+        paused = !paused;
+        playPauseBtn.textContent = paused ? 'Play' : 'Pause';
+        if (!paused && buffer.length) {
+          for (const line of buffer) term.writeln(line);
+          buffer = [];
+        }
+      });
+      restartBtn.addEventListener('click', () => {
+        if (!term || !lastConfig) return;
+        term.reset();
+        connectWS(lastConfig);
+      });
+
+      // Populate time selects with best-practice ranges and sensible default (00:00:45)
+      (function initTimeInputs() {
+        const hSel = document.getElementById('durationH');
+        const mSel = document.getElementById('durationM');
+        const sSel = document.getElementById('durationS');
+        for (let h = 0; h <= 23; h++) {
+          const o = document.createElement('option'); o.value = String(h); o.textContent = String(h).padStart(2,'0'); hSel.appendChild(o);
+        }
+        for (let i = 0; i <= 59; i++) {
+          const om = document.createElement('option'); om.value = String(i); om.textContent = String(i).padStart(2,'0'); mSel.appendChild(om);
+          const os = document.createElement('option'); os.value = String(i); os.textContent = String(i).padStart(2,'0'); sSel.appendChild(os);
+        }
+        // default 00:00:45
+        hSel.value = '0'; mSel.value = '0'; sSel.value = '45';
+      })();
+
+      function showControls() {
+        topbar.classList.add('visible');
+        if (hideTimer) clearTimeout(hideTimer);
+        hideTimer = setTimeout(hideControls, 5000);
+      }
+
+      function hideControls() {
+        if (hideTimer) { clearTimeout(hideTimer); hideTimer = null; }
+        topbar.classList.remove('visible');
+      }
+
+      function enableOverlayControls() {
+        // Mouse double-click
+        terminalWrap.addEventListener('dblclick', showControls);
+        // Touch double-tap
+        terminalWrap.addEventListener('touchend', (e) => {
+          const now = Date.now();
+          if (now - lastTapTime < 350) {
+            showControls();
+            lastTapTime = 0;
+          } else {
+            lastTapTime = now;
+          }
+        });
+      }
     </script>
   </body>
   </html>
