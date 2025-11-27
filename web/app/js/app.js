@@ -182,6 +182,9 @@ function connectWS(config, isReconnect = false) {
   buffer = [];
   playPauseBtn.textContent = 'Pause';
 
+  // Track if simulation completed normally (don't reconnect in that case)
+  let simulationComplete = false;
+
   // Reset reconnect counter on fresh connection
   if (!isReconnect) {
     reconnectAttempts = 0;
@@ -214,6 +217,10 @@ function connectWS(config, isReconnect = false) {
     reconnectAttempts = 0; // Reset on successful connection
   });
   socket.addEventListener('message', (ev) => {
+    // Check if this is the completion message
+    if (ev.data.includes('Simulation complete')) {
+      simulationComplete = true;
+    }
     if (paused) {
       buffer.push(ev.data);
     } else {
@@ -221,18 +228,24 @@ function connectWS(config, isReconnect = false) {
     }
   });
   socket.addEventListener('close', () => {
-    setStatus('Disconnected');
-    stopCountdown(true);
-    // Auto-reconnect with exponential backoff
-    if (term && reconnectAttempts < maxReconnectAttempts) {
-      const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
-      reconnectAttempts++;
-      setStatus(`Reconnecting (${reconnectAttempts}/${maxReconnectAttempts})...`);
-      setTimeout(() => {
-        if (term && lastConfig) {
-          connectWS(lastConfig, true);
-        }
-      }, delay);
+    if (simulationComplete) {
+      // Normal completion - don't reconnect
+      setStatus('Complete');
+      stopCountdown(true);
+    } else {
+      // Unexpected disconnect - try to reconnect
+      setStatus('Disconnected');
+      stopCountdown(true);
+      if (term && reconnectAttempts < maxReconnectAttempts) {
+        const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), 10000);
+        reconnectAttempts++;
+        setStatus(`Reconnecting (${reconnectAttempts}/${maxReconnectAttempts})...`);
+        setTimeout(() => {
+          if (term && lastConfig) {
+            connectWS(lastConfig, true);
+          }
+        }, delay);
+      }
     }
   });
   socket.addEventListener('error', () => { setStatus('Error'); });
