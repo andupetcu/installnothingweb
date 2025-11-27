@@ -52,9 +52,8 @@ pub trait InstallationStage {
 use crate::config::SimulationConfig;
 
 /// Get selected installation stages in order
-pub fn selected_stages(stages: &[Stage]) -> Vec<Box<dyn InstallationStage>> {
+pub fn selected_stages(stages: &[Stage], config: &SimulationConfig) -> Vec<Box<dyn InstallationStage>> {
     let mut result = Vec::new();
-    let config = SimulationConfig::default();
 
     for stage in stages {
         let stage_impl: Box<dyn InstallationStage> = match stage {

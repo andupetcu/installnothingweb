@@ -12,6 +12,7 @@ mod ui;
 use clap::Parser;
 use cli::Cli;
 use colored::*;
+use config::SimulationConfig;
 use installer::Installer;
 use rand::seq::SliceRandom;
 use std::io;
@@ -29,8 +30,17 @@ fn run_installer() -> io::Result<()> {
     let mut rng = rand::thread_rng();
     stages.shuffle(&mut rng);
 
+    // Build config based on CLI flags
+    let mut config = SimulationConfig::default();
+    if cli.fast {
+        config = config.with_fast_mode();
+    }
+    if cli.chaos {
+        config = config.with_chaos_mode();
+    }
+
     let cycles = cli.cycles; // None => infinite
-    let mut installer = Installer::new_with_cycles(stages, cycles);
+    let mut installer = Installer::new_with_config(stages, cycles, config);
     installer.run()
 }
 

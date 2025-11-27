@@ -16,8 +16,10 @@ serde = { version = "1.0", features = ["derive"] }
 
 # Web server dependencies for optional web demo
 axum = { version = "0.7", features = ["ws"] }
-tokio = { version = "1.39", features = ["rt-multi-thread", "macros", "time", "fs", "process", "io-util"] }
+tokio = { version = "1.39", features = ["rt-multi-thread", "macros", "time", "fs", "process", "io-util", "signal"] }
 tower-http = { version = "0.5", features = ["fs"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 
 [[bin]]
 name = "installer-web"

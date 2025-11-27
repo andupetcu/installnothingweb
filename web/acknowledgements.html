@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Acknowledgements — Install Nothing</title>
+    <meta name="description" content="Credits and acknowledgements for Install Nothing terminal simulator.">
+    <link rel="canonical" href="https://installnothing.com/acknowledgements.html">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+
+      :root {
+        --bg: #0a0a0a;
+        --bg-alt: #111111;
+        --fg: #e6e6e6;
+        --fg-muted: #888888;
+        --accent: #3d8bfd;
+        --accent-hover: #5a9eff;
+        --green: #34c759;
+        --border: #222222;
+      }
+
+      html { scroll-behavior: smooth; }
+
+      body {
+        min-height: 100vh;
+        background: var(--bg);
+        color: var(--fg);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+        line-height: 1.6;
+      }
+
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { color: var(--accent-hover); }
+
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 0 24px;
+      }
+
+      header {
+        padding: 16px 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .header-inner {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .logo {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 18px;
+        font-weight: 600;
+        color: var(--fg);
+      }
+
+      .logo span { color: var(--green); }
+
+      nav a {
+        margin-left: 24px;
+        color: var(--fg-muted);
+        font-size: 14px;
+      }
+
+      nav a:hover { color: var(--fg); }
+
+      main {
+        padding: 60px 0;
+      }
+
+      h1 {
+        font-size: 2rem;
+        margin-bottom: 16px;
+      }
+
+      .intro {
+        color: var(--fg-muted);
+        font-size: 1.1rem;
+        margin-bottom: 48px;
+      }
+
+      section {
+        margin-bottom: 48px;
+      }
+
+      h2 {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+        color: var(--green);
+      }
+
+      .credit-card {
+        background: var(--bg-alt);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 16px;
+      }
+
+      .credit-card h3 {
+        font-size: 1.1rem;
+        margin-bottom: 8px;
+      }
+
+      .credit-card p {
+        color: var(--fg-muted);
+        font-size: 0.95rem;
+        margin-bottom: 12px;
+      }
+
+      .credit-card .links {
+        font-size: 0.9rem;
+      }
+
+      .credit-card .links a {
+        margin-right: 16px;
+      }
+
+      .dep-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 16px;
+      }
+
+      .dep-item {
+        background: var(--bg-alt);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 16px;
+      }
+
+      .dep-item h4 {
+        font-size: 1rem;
+        margin-bottom: 4px;
+      }
+
+      .dep-item .license {
+        font-size: 0.8rem;
+        color: var(--green);
+        margin-bottom: 8px;
+      }
+
+      .dep-item p {
+        color: var(--fg-muted);
+        font-size: 0.85rem;
+      }
+
+      footer {
+        padding: 40px 0;
+        border-top: 1px solid var(--border);
+        text-align: center;
+        color: var(--fg-muted);
+        font-size: 0.9rem;
+      }
+
+      @media (max-width: 600px) {
+        main { padding: 40px 0; }
+        h1 { font-size: 1.6rem; }
+        .header-inner { flex-direction: column; gap: 12px; }
+        nav a { margin: 0 12px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="container header-inner">
+        <a href="/" class="logo"><span>&gt;_</span> Install Nothing</a>
+        <nav>
+          <a href="/">Home</a>
+          <a href="/app/">Launch App</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <h1>Acknowledgements</h1>
+        <p class="intro">Install Nothing is built on the shoulders of giants. We'd like to thank the following projects and people who made this possible.</p>
+
+        <section>
+          <h2>Original Project</h2>
+          <div class="credit-card">
+            <h3>Install Nothing CLI</h3>
+            <p>This web application is based on the original Install Nothing CLI simulator created by Kerim Buyukakyuz. The core simulation logic, stage designs, and nostalgic installation experience were all pioneered in the original project.</p>
+            <div class="links">
+              <a href="https://github.com/buyukakyuz/install-nothing" target="_blank">GitHub Repository</a>
+              <a href="https://github.com/buyukakyuz" target="_blank">@buyukakyuz</a>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Backend Dependencies</h2>
+          <div class="dep-list">
+            <div class="dep-item">
+              <h4>Axum</h4>
+              <div class="license">MIT License</div>
+              <p>Ergonomic and modular web framework for Rust, powering our WebSocket server.</p>
+            </div>
+            <div class="dep-item">
+              <h4>Tokio</h4>
+              <div class="license">MIT License</div>
+              <p>Asynchronous runtime for Rust, enabling efficient concurrent processing.</p>
+            </div>
+            <div class="dep-item">
+              <h4>crossterm</h4>
+              <div class="license">MIT License</div>
+              <p>Cross-platform terminal manipulation library for rich CLI output.</p>
+            </div>
+            <div class="dep-item">
+              <h4>clap</h4>
+              <div class="license">MIT / Apache 2.0</div>
+              <p>Command line argument parser with derive macros for clean CLI interfaces.</p>
+            </div>
+            <div class="dep-item">
+              <h4>sysinfo</h4>
+              <div class="license">MIT License</div>
+              <p>System information library for realistic hardware detection simulation.</p>
+            </div>
+            <div class="dep-item">
+              <h4>colored</h4>
+              <div class="license">MPL 2.0</div>
+              <p>Terminal colors made easy with a simple, intuitive API.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Frontend Dependencies</h2>
+          <div class="dep-list">
+            <div class="dep-item">
+              <h4>xterm.js</h4>
+              <div class="license">MIT License</div>
+              <p>Full-featured terminal emulator component for the web, rendering our simulation output.</p>
+            </div>
+            <div class="dep-item">
+              <h4>xterm-addon-fit</h4>
+              <div class="license">MIT License</div>
+              <p>Addon for xterm.js that enables automatic terminal resizing.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Fonts</h2>
+          <div class="dep-list">
+            <div class="dep-item">
+              <h4>JetBrains Mono</h4>
+              <div class="license">OFL 1.1</div>
+              <p>A typeface for developers, designed by JetBrains.</p>
+            </div>
+            <div class="dep-item">
+              <h4>Fira Code</h4>
+              <div class="license">OFL 1.1</div>
+              <p>Monospaced font with programming ligatures.</p>
+            </div>
+            <div class="dep-item">
+              <h4>Source Code Pro</h4>
+              <div class="license">OFL 1.1</div>
+              <p>Monospaced font family by Adobe for user interface and coding.</p>
+            </div>
+            <div class="dep-item">
+              <h4>Ubuntu Mono</h4>
+              <div class="license">Ubuntu Font License</div>
+              <p>The Ubuntu font family's monospace variant.</p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>License</h2>
+          <div class="credit-card">
+            <h3>MIT License</h3>
+            <p>Install Nothing is open source software licensed under the MIT License. You are free to use, modify, and distribute this software in accordance with the license terms.</p>
+            <div class="links">
+              <a href="https://github.com/andupetcu/installnothingweb" target="_blank">View Source on GitHub</a>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="container">
+        <p>Based on work by <a href="https://github.com/buyukakyuz">Kerim Buyukakyuz</a> · MIT License</p>
+      </div>
+    </footer>
+  </body>
+</html>

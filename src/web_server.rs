@@ -1,7 +1,8 @@
-use std::{net::SocketAddr, time::Duration};
+use std::{net::SocketAddr, sync::atomic::{AtomicUsize, Ordering}, time::Duration};
 
 use axum::{
     extract::{Query, WebSocketUpgrade},
+    http::StatusCode,
     response::IntoResponse,
     routing::get,
     Router,
@@ -10,6 +11,11 @@ use axum::extract::ws::{Message, WebSocket};
 use serde::Deserialize;
 use tokio::{io::{AsyncBufReadExt, BufReader}, net::TcpListener, process::Command, time::timeout};
 use tower_http::services::ServeDir;
+use tracing::{info, warn};
+
+// Simple connection counter for rate limiting
+static ACTIVE_CONNECTIONS: AtomicUsize = AtomicUsize::new(0);
+const MAX_CONNECTIONS: usize = 50;
 
 #[derive(Debug, Deserialize)]
 struct WsParams {
@@ -21,26 +27,56 @@ struct WsParams {
 
 #[tokio::main]
 async fn main() {
+    // Initialize logger
+    tracing_subscriber::fmt()
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .init();
+
     // Static files under ./web
     let static_service = ServeDir::new("web");
 
     let app = Router::new()
         .route("/ws", get(ws_handler))
+        .route("/health", get(|| async { "ok" }))
         .fallback_service(static_service);
 
-    let addr: SocketAddr = "0.0.0.0:3000".parse().unwrap();
-    println!("installer-web listening on http://{addr}");
-    println!("Open in your browser to test the simulation.");
+    let port = std::env::var("PORT")
+        .ok()
+        .and_then(|p| p.parse::<u16>().ok())
+        .unwrap_or(3000);
+    let addr: SocketAddr = format!("0.0.0.0:{}", port).parse().unwrap();
+    info!("installer-web listening on http://{addr}");
+    info!("Open in your browser to test the simulation.");
 
     let listener = TcpListener::bind(addr).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
+}
+
+async fn shutdown_signal() {
+    tokio::signal::ctrl_c()
+        .await
+        .expect("Failed to install CTRL+C handler");
+    info!("Shutdown signal received, stopping server...");
 }
 
 async fn ws_handler(ws: WebSocketUpgrade, Query(params): Query<WsParams>) -> impl IntoResponse {
-    ws.on_upgrade(move |socket| websocket_stream(socket, params))
+    // Check rate limit
+    let current = ACTIVE_CONNECTIONS.load(Ordering::SeqCst);
+    if current >= MAX_CONNECTIONS {
+        warn!("Rate limit exceeded: {} active connections", current);
+        return (StatusCode::SERVICE_UNAVAILABLE, "Too many connections").into_response();
+    }
+
+    ws.on_upgrade(move |socket| websocket_stream(socket, params)).into_response()
 }
 
 async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
+    // Increment connection counter
+    ACTIVE_CONNECTIONS.fetch_add(1, Ordering::SeqCst);
+
     let duration_secs = params.duration.unwrap_or(30);
     let stack = params.stack.unwrap_or_else(|| "default".to_string());
     let theme = params.theme.unwrap_or_else(|| "dracula".to_string());
@@ -49,8 +85,8 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
     // Start a child process of the CLI simulator and stream its stdout
     let binary = resolve_cli_binary();
     let mut cmd = Command::new(binary);
-    // Run many cycles and enforce duration by timeout
-    cmd.arg("--cycles").arg("100000");
+    // Run effectively infinite cycles (duration is enforced by timeout or client disconnect)
+    cmd.arg("--cycles").arg("999999999");
     // Map stack -> CLI args
     if stack == "default" {
         cmd.arg("--all");
@@ -65,6 +101,18 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
         Ok(mut child) => {
             let stdout = child.stdout.take();
             let mut reader = stdout.map(BufReader::new);
+
+            // Spawn task to log stderr
+            if let Some(stderr) = child.stderr.take() {
+                tokio::spawn(async move {
+                    let mut reader = BufReader::new(stderr);
+                    let mut line = String::new();
+                    while reader.read_line(&mut line).await.unwrap_or(0) > 0 {
+                        warn!("[child stderr] {}", line.trim());
+                        line.clear();
+                    }
+                });
+            }
 
             let banner = if endless {
                 format!("\u{001b}[36mStarting simulation (stack: {stack}, theme: {theme}, mode: ENDLESS).\u{001b}[0m")
@@ -135,25 +183,22 @@ async fn websocket_stream(mut socket: WebSocket, params: WsParams) {
             let _ = socket.close().await;
         }
     }
-}
 
-fn demo_lines() -> Vec<String> {
-    vec![
-        "[INFO] Initializing environment...".into(),
-        "[OK] Connected to mirror.oldsoft.org".into(),
-        "[INFO] Installing packages...".into(),
-        "[WARN] Slow response from mirror, retrying...".into(),
-        "[OK] Kernel modules compiled".into(),
-        "[INFO] Finalizing configuration".into(),
-    ]
+    // Decrement connection counter
+    ACTIVE_CONNECTIONS.fetch_sub(1, Ordering::SeqCst);
 }
 
 fn resolve_cli_binary() -> String {
-    // Prefer release build; fall back to debug
-    let release = "target/release/install-nothing";
-    if std::path::Path::new(release).exists() { return release.to_string(); }
-    let debug = "target/debug/install-nothing";
-    if std::path::Path::new(debug).exists() { return debug.to_string(); }
-    // Last resort: rely on PATH
+    // Check env var first (for Docker/production)
+    if let Ok(path) = std::env::var("CLI_BINARY_PATH") {
+        return path;
+    }
+    // Development paths
+    for path in ["target/release/install-nothing", "target/debug/install-nothing"] {
+        if std::path::Path::new(path).exists() {
+            return path.to_string();
+        }
+    }
+    // Fallback to PATH
     "install-nothing".to_string()
 }

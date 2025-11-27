@@ -17,6 +17,7 @@ WORKDIR /app
 COPY --from=builder /app/target/release/installer-web /usr/local/bin/
 COPY --from=builder /app/target/release/install-nothing /usr/local/bin/
 COPY --from=builder /app/web ./web
+COPY --from=builder /app/data ./data
 
 ENV RUST_LOG=info
 EXPOSE 3000

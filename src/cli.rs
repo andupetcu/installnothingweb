@@ -92,6 +92,14 @@ pub struct Cli {
     /// Number of cycles to run (omit for endless)
     #[arg(long)]
     pub cycles: Option<usize>,
+
+    /// Fast mode - reduce all delays by 50%
+    #[arg(long)]
+    pub fast: bool,
+
+    /// Chaos mode - increase failure rates for more dramatic simulations
+    #[arg(long)]
+    pub chaos: bool,
 }
 
 impl Cli {
@@ -115,6 +123,8 @@ mod tests {
             stages: vec![],
             all: false,
             cycles: None,
+            fast: false,
+            chaos: false,
         };
         assert_eq!(cli.get_stages(), Stage::all());
     }
@@ -125,6 +135,8 @@ mod tests {
             stages: vec![],
             all: true,
             cycles: None,
+            fast: false,
+            chaos: false,
         };
         assert_eq!(cli.get_stages(), Stage::all());
     }
@@ -135,7 +147,35 @@ mod tests {
             stages: vec![Stage::Bios, Stage::Boot],
             all: false,
             cycles: None,
+            fast: false,
+            chaos: false,
         };
         assert_eq!(cli.get_stages(), vec![Stage::Bios, Stage::Boot]);
+    }
+
+    #[test]
+    fn test_fast_mode_flag() {
+        let cli = Cli {
+            stages: vec![],
+            all: true,
+            cycles: None,
+            fast: true,
+            chaos: false,
+        };
+        assert!(cli.fast);
+        assert!(!cli.chaos);
+    }
+
+    #[test]
+    fn test_chaos_mode_flag() {
+        let cli = Cli {
+            stages: vec![],
+            all: true,
+            cycles: None,
+            fast: false,
+            chaos: true,
+        };
+        assert!(!cli.fast);
+        assert!(cli.chaos);
     }
 }

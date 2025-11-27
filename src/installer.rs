@@ -1,4 +1,5 @@
 use crate::cli::Stage;
+use crate::config::SimulationConfig;
 use crate::messages::{EASTER_EGGS, RETRY_MESSAGES, WARNINGS};
 use crate::stages::selected_stages;
 use crate::ui::Spinner;
@@ -18,6 +19,7 @@ pub struct Installer {
     rng: rand::rngs::ThreadRng,
     selected_stages: Vec<Stage>,
     cycles: Option<usize>,
+    config: SimulationConfig,
 }
 
 impl Installer {
@@ -26,6 +28,7 @@ impl Installer {
             rng: rand::thread_rng(),
             selected_stages: stages,
             cycles: None,
+            config: SimulationConfig::default(),
         }
     }
 
@@ -34,6 +37,16 @@ impl Installer {
             rng: rand::thread_rng(),
             selected_stages: stages,
             cycles,
+            config: SimulationConfig::default(),
+        }
+    }
+
+    pub fn new_with_config(stages: Vec<Stage>, cycles: Option<usize>, config: SimulationConfig) -> Self {
+        Self {
+            rng: rand::thread_rng(),
+            selected_stages: stages,
+            cycles,
+            config,
         }
     }
 
@@ -161,7 +174,7 @@ impl Installer {
                 thread::sleep(Duration::from_millis(1000));
             }
 
-            let stages = selected_stages(&self.selected_stages);
+            let stages = selected_stages(&self.selected_stages, &self.config);
 
             for stage in stages {
                 if self.check_exit() {
@@ -200,6 +213,6 @@ impl Installer {
 
 impl Default for Installer {
     fn default() -> Self {
-        Self::new(Stage::all())
+        Self::new_with_config(Stage::all(), None, SimulationConfig::default())
     }
 }
